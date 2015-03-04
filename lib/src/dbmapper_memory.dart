@@ -126,8 +126,10 @@ class Validator implements Validation {
   
   static Set<Validation> buildValidations(Field field) {
     var validations = new Set();
-    if (field.constraints.any((constraint) => constraint is Unique))
+    if (UniqueValidation.shouldValidate(field.constraints))
       validations.add(new UniqueValidation());
+    if (NotNullValidation.shouldValidate(field.constraints))
+      validations.add(new NotNullValidation());
     return validations;
   }
 }
@@ -151,6 +153,15 @@ class NotNullValidation implements Validation {
   }
   
   int get hashCode => typeCode(NotNullValidation);
+  
+  static bool shouldValidate(Set<Constraint> constraints) {
+    var result = false;
+    for (var constraint in constraints) {
+      if (constraint is AutoIncrement) return false;
+      if (constraint is NotNull) result = true;
+    }
+    return result;
+  }
 }
 
 class UniqueValidation implements Validation {
@@ -165,4 +176,8 @@ class UniqueValidation implements Validation {
   }
   
   int get hashCode => typeCode(UniqueValidation);
+  
+  static bool shouldValidate(Set<Constraint> constraints) {
+    return constraints.any((constraint) => constraint is Unique);
+  }
 }

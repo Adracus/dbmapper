@@ -180,6 +180,17 @@ defineTests() {
         expect(u1.hashCode, equals(u2.hashCode));
         expect(u1.hashCode, equals(typeCode(UniqueValidation)));
       });
+      
+      test("shouldValidate", () {
+        var c1s = new Set.from([Constraint.unique, Constraint.notNull]);
+        var c2s = new Set.from([Constraint.notNull]);
+        var c3s = new Set();
+        var shouldValidate = UniqueValidation.shouldValidate;
+        
+        expect(shouldValidate(c1s), isTrue);
+        expect(shouldValidate(c2s), isFalse);
+        expect(shouldValidate(c3s), isFalse);
+      });
     });
     
     group("NotNullValidation", () {
@@ -204,6 +215,19 @@ defineTests() {
         expect(n1.hashCode, equals(n2.hashCode));
         expect(n1.hashCode, equals(typeCode(NotNullValidation)));
       });
+      
+      test("shouldValidate", () {
+        var c1s = new Set.from([Constraint.autoIncrement, Constraint.notNull]);
+        var c2s = new Set.from([Constraint.notNull]);
+        var c3s = new Set();
+        var c4s = new Set.from([Constraint.primaryKey]);
+        
+        var shouldValidate = NotNullValidation.shouldValidate;
+        expect(shouldValidate(c1s), isFalse);
+        expect(shouldValidate(c2s), isTrue);
+        expect(shouldValidate(c3s), isFalse);
+        expect(shouldValidate(c4s), isTrue);
+      });
     });
     
     group("Validator", () {
@@ -218,6 +242,27 @@ defineTests() {
         expect(v2.isValid("test", ["test", "other", "some"]), isFalse);
         expect(v1.isValid("test", []), isTrue);
         expect(v2.isValid("test", []), isTrue);
+      });
+      
+      test("buildValidations", () {
+        var f1 = new Field("other",
+            constraints: new Set.from([Constraint.unique,
+                                       Constraint.autoIncrement,
+                                       Constraint.notNull]));
+        var f2 = new Field("other",
+            constraints: new Set.from([Constraint.notNull]));
+        var f3 = new Field("other",
+            constraints: new Set.from([Constraint.primaryKey]));
+        
+        var buildValidations = Validator.buildValidations;
+        
+        expect(buildValidations(f1),
+            equals(new Set.from([Validation.uniqueValidation])));
+        expect(buildValidations(f2),
+            equals(new Set.from([Validation.notNullValidation])));
+        expect(buildValidations(f3),
+            equals(new Set.from([Validation.notNullValidation,
+                                 Validation.uniqueValidation])));
       });
     });
   });

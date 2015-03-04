@@ -74,6 +74,7 @@ abstract class Constraint {
   static const unique = const Unique();
   static const primaryKey = const PrimaryKey();
   static const autoIncrement = const AutoIncrement();
+  static const notNull = const NotNull();
 }
 
 class Unique {
@@ -83,7 +84,7 @@ class Unique {
   int get hashCode => typeCode(Unique);
 }
 
-class PrimaryKey implements Unique {
+class PrimaryKey implements Unique, NotNull {
   const PrimaryKey();
   
   bool operator==(other) => other is PrimaryKey;
