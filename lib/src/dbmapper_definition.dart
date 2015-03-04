@@ -93,7 +93,7 @@ abstract class Constraint {
   static const notNull = const NotNull();
 }
 
-class Unique {
+class Unique implements Constraint {
   const Unique();
   
   bool operator==(other) => other is Unique;
