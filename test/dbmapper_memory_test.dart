@@ -115,6 +115,32 @@ defineTests() {
       ]));
     });
     
+    test("delete", () {
+      var fields = new Set.from([
+        new Field("myField",
+            constraints: new Set.from([Constraint.autoIncrement,
+                                           Constraint.unique])),
+        new Field("otherField")]);
+      var table = new Table("table", fields);
+      var memoryTable = new MemoryTable(table);
+      memoryTable.store({});
+      memoryTable.store({"otherField": "yeah"});
+      memoryTable.store({"otherField": "test"});
+      memoryTable.store({"otherField": "test"});
+      
+      expect(memoryTable.records.length, equals(4));
+      
+      memoryTable.delete({"otherField": "yeah"});
+      expect(memoryTable.records, equals([
+        {"myField": 0},
+        {"myField": 2, "otherField": "test"},
+        {"myField": 3, "otherField": "test"}
+      ]));
+      
+      memoryTable.delete({"otherField": "test"});
+      expect(memoryTable.records.single, equals({"myField": 0}));
+    });
+    
     test("applyIncrements", () {
       var fields = new Set.from([
         new Field("myField",

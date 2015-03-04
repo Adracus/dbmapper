@@ -14,4 +14,6 @@ abstract class Database {
   
   Future<List<Map<String, dynamic>>>
     where(String tableName, Map<String, dynamic> criteria);
+  
+  Future delete(String tableName, Map<String, dynamic> criteria);
 }

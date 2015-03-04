@@ -38,6 +38,12 @@ class MemoryDatabase implements Database {
     var table = getTable(tableName);
     return new Future.value(table.where(criteria));
   }
+  
+  Future delete(String tableName, Map<String, dynamic> criteria) {
+    var table = getTable(tableName);
+    table.delete(criteria);
+    return new Future.value();
+  }
 }
 
 
@@ -93,11 +99,19 @@ class MemoryTable {
   int get hashCode => table.hashCode;
   
   List<Map<String, dynamic>> where(Map<String, dynamic> criteria) {
-    return _records.where((record) {
+    return _records.where(recordMatcher(criteria)).toList();
+  }
+  
+  void delete(Map<String, dynamic> criteria) {
+    records.removeWhere(recordMatcher(criteria));
+  }
+  
+  static recordMatcher(Map<String, dynamic> criteria) {
+    return (record) {
       return criteria.keys.every((key) {
         return record[key] == criteria[key];
       });
-    }).toList();
+    };
   }
 }
 
