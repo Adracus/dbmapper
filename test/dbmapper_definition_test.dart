@@ -7,6 +7,68 @@ import 'package:unittest/unittest.dart';
 main() => defineTests();
 
 defineTests() {
+  test("typeCode", () {
+    var stringType = String;
+    var intType = int;
+    
+    expect(stringType.hashCode, equals(typeCode(String)));
+    expect(intType.hashCode, isNot(equals(typeCode(String))));
+  });
+  
+  group("Definition", () {
+    test("getTable", () {
+      var fields1 = new Set.from([new Field("myField")]);
+      var fields2 = new Set.from([new Field("otherField")]);
+      var t1 = new Table("table", fields1);
+      var t2 = new Table("othertable", fields2);
+      var definition = new Definition(new Set.from([t1, t2]));
+      
+      expect(definition.getTable("table"), equals(t1));
+      expect(definition.getTable("othertable"), equals(t2));
+      expect(() => definition.getTable("notexist"), throws);
+    });
+  });
+  
+  group("Table", () {
+    test("checkFields", () {
+      expect(() => Table.checkFields(new Set()), throws);
+      expect(() => Table.checkFields(new Set.from([new Field("test")])),
+          returnsNormally);
+    });
+    
+    test("==", () {
+      var fields1 = new Set.from([new Field("myField")]);
+      var fields2 = new Set.from([new Field("otherField")]);
+      var t1 = new Table("table", fields1);
+      var t2 = new Table("table", fields2);
+      var t3 = new Table("notTable", fields1);
+      
+      expect(t1, equals(t2));
+      expect(t1, isNot(equals(t3)));
+    });
+    
+    test("getField", () {
+      var fields = new Set.from([new Field("myField"), new Field("otherField")]);
+      var t = new Table("table", fields);
+      
+      expect(t.getField("myField"), equals(new Field("myField")));
+      expect(t.getField("otherField"), equals(new Field("otherField")));
+      expect(() => t.getField("unknown"), throws);
+    });
+    
+    test("hashCode", () {
+      var fields1 = new Set.from([new Field("myField")]);
+      var fields2 = new Set.from([new Field("otherField")]);
+      var t1 = new Table("table", fields1);
+      var t2 = new Table("table", fields2);
+      var t3 = new Table("notTable", fields1);
+      
+      expect(t1.hashCode, equals(t2.hashCode));
+      expect(t1.hashCode, isNot(equals(t3.hashCode)));
+      expect(t1.hashCode, equals("table".hashCode));
+    });
+  });
+  
   group("Field", () {
     test("==", () {
       var f1 = new Field("myfield");
@@ -100,6 +162,22 @@ defineTests() {
         
         expect(p1.hashCode, equals(p2.hashCode));
         expect(p1.hashCode, equals(typeCode(PrimaryKey)));
+      });
+    });
+    
+    group("AutoIncrement", () {
+      test("==", () {
+        var a1 = new AutoIncrement();
+        var a2 = new AutoIncrement();
+        
+        expect(a1, equals(a2));
+      });
+      test("hashCode", () {
+        var a1 = new AutoIncrement();
+        var a2 = new AutoIncrement();
+        
+        expect(a1.hashCode, equals(a2.hashCode));
+        expect(a1.hashCode, equals(typeCode(AutoIncrement)));
       });
     });
   });

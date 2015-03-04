@@ -6,3 +6,4 @@
 library dbmapper.base;
 
 export 'dbmapper_definition.dart';
+export 'dbmapper_memory.dart';
