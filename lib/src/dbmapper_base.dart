@@ -5,7 +5,4 @@
 
 library dbmapper.base;
 
-/// Checks if you are awesome. Spoiler: you are.
-class Awesome {
-  bool get isAwesome => true;
-}
+export 'dbmapper_definition.dart';
