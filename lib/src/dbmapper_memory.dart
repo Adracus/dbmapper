@@ -237,6 +237,7 @@ class Validator implements Validation {
   
   static Set<Validation> buildValidations(Field field) {
     var validations = new Set();
+    validations.add(new TypeValidation(field.type));
     if (UniqueValidation.shouldValidate(field.constraints))
       validations.add(new UniqueValidation());
     if (NotNullValidation.shouldValidate(field.constraints))
@@ -250,6 +251,26 @@ abstract class Validation {
   static const NotNullValidation notNullValidation = const NotNullValidation();
   
   bool isValid(value, List compare);
+}
+
+class TypeValidation implements Validation {
+  static final Map<FieldType, Function> _validators = {
+    Date: (val) => val is DateTime,
+    Bool: (val) => val is bool,
+    Number: (val) => val is num,
+    Text: (val) => val is String
+  };
+  
+  final _validator;
+  
+  TypeValidation(FieldType type)
+      : _validator = _validators[type.runtimeType];
+  
+  bool isValid(value, List compare) =>
+      _validator(value);
+  
+  bool operator==(other) => other is TypeValidation;
+  int get hashCode => typeCode(TypeValidation);
 }
 
 class NotNullValidation implements Validation {

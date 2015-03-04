@@ -54,6 +54,8 @@ class Field {
 abstract class FieldType {
   static const number = const Number();
   static const text = const Text();
+  static const boolType = const Bool();
+  static const date = const Date();
 }
 
 class Number implements FieldType {
@@ -61,6 +63,20 @@ class Number implements FieldType {
   
   bool operator==(other) => other is Number;
   int get hashCode => typeCode(Number);
+}
+
+class Bool implements FieldType {
+  const Bool();
+  
+  bool operator==(other) => other is Bool;
+  int get hashCode => typeCode(Bool);
+}
+
+class Date implements FieldType {
+  const Date();
+  
+  bool operator==(other) => other is Date;
+  int get hashCode => typeCode(Date);
 }
 
 class Text implements FieldType {

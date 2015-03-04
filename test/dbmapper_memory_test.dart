@@ -135,6 +135,7 @@ defineTests() {
     test("store", () {
       var fields = new Set.from([
         new Field("myField",
+            type: FieldType.number,
             constraints: new Set.from([Constraint.autoIncrement,
                                            Constraint.unique])),
         new Field("otherField")]);
@@ -207,6 +208,7 @@ defineTests() {
     test("update", () {
       var fields = new Set.from([
         new Field("myField",
+            type: FieldType.number,
             constraints: new Set.from([Constraint.autoIncrement,
                                            Constraint.unique])),
         new Field("otherField")]);
@@ -345,6 +347,39 @@ defineTests() {
       });
     });
     
+    group("TypeValidation", () {
+      test("==", () {
+        var v1 = new TypeValidation(FieldType.boolType);
+        var v2 = new TypeValidation(FieldType.text);
+        
+        expect(v1, equals(v2));
+      });
+      
+      test("hashCode", () {
+        var v1 = new TypeValidation(FieldType.boolType);
+        var v2 = new TypeValidation(FieldType.text);
+        
+        expect(v1.hashCode, equals(v2.hashCode));
+        expect(v1.hashCode, equals(typeCode(TypeValidation)));
+      });
+      
+      test("isValid", () {
+        var numValidator = new TypeValidation(FieldType.number);
+        var textValidator = new TypeValidation(FieldType.text);
+        var boolValidator = new TypeValidation(FieldType.boolType);
+        var dateValidator = new TypeValidation(FieldType.date);
+        
+        expect(numValidator.isValid(1, []), isTrue);
+        expect(numValidator.isValid("t", []), isFalse);
+        expect(textValidator.isValid("t", []), isTrue);
+        expect(textValidator.isValid(1, []), isFalse);
+        expect(boolValidator.isValid(true, []), isTrue);
+        expect(boolValidator.isValid(1, []), isFalse);
+        expect(dateValidator.isValid(new DateTime.now(), []), isTrue);
+        expect(dateValidator.isValid(1, []), isFalse);
+      });
+    });
+    
     group("Validator", () {
       test("isValid", () {
         var f1 = new Field("myfield");
@@ -372,12 +407,15 @@ defineTests() {
         var buildValidations = Validator.buildValidations;
         
         expect(buildValidations(f1),
-            equals(new Set.from([Validation.uniqueValidation,
+            equals(new Set.from([new TypeValidation(null),
+                                 Validation.uniqueValidation,
                                  Validation.notNullValidation])));
         expect(buildValidations(f2),
-            equals(new Set.from([Validation.notNullValidation])));
+            equals(new Set.from([new TypeValidation(null),
+                                 Validation.notNullValidation])));
         expect(buildValidations(f3),
-            equals(new Set.from([Validation.notNullValidation,
+            equals(new Set.from([new TypeValidation(null),
+                                 Validation.notNullValidation,
                                  Validation.uniqueValidation])));
       });
     });

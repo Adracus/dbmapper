@@ -128,6 +128,40 @@ defineTests() {
         expect(t1.hashCode, equals(typeCode(Text)));
       });
     });
+    
+    group("Bool", () {
+      test("==", () {
+        var b1 = new Bool();
+        var b2 = new Bool();
+        
+        expect(b1, equals(b2));
+      });
+      
+      test("hashCode", () {
+        var b1 = new Bool();
+        var b2 = new Bool();
+        
+        expect(b1.hashCode, equals(b2.hashCode));
+        expect(b1.hashCode, equals(typeCode(Bool)));
+      });
+    });
+    
+    group("Date", () {
+      test("==", () {
+        var d1 = new Date();
+        var d2 = new Date();
+        
+        expect(d1, equals(d2));
+      });
+      
+      test("hashCode", () {
+        var d1 = new Date();
+        var d2 = new Date();
+        
+        expect(d1.hashCode, equals(d2.hashCode));
+        expect(d1.hashCode, equals(typeCode(Date)));
+      });
+    });
   });
   
   group("Constraint", () {
