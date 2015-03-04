@@ -1,8 +1,8 @@
 name: dbmapper
 version: 0.0.1
-description: A library useful for applications or for sharing on pub.dartlang.org.
+description: Database mapping library
 dependencies:
-  logging: any
-  postgresql: any
+  logging: ">=0.9.3 <0.10.0"
+  postgresql: ">=0.3.0+2 <0.4.0"
 dev_dependencies:
-  unittest: any
+  unittest: ">=0.11.5+4 <0.12.0"
