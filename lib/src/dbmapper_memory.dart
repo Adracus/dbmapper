@@ -1,6 +1,7 @@
 library dbmapper.memory;
 
 import 'dart:async' show Future;
+import 'dart:math' show max;
 
 import 'dbmapper_definition.dart';
 import 'dbmapper_database.dart';
@@ -44,52 +45,61 @@ class MemoryDatabase implements Database {
     table.delete(criteria);
     return new Future.value();
   }
+  
+  Future<List<Map<String, dynamic>>> update(String tableName, Map<String, dynamic> criteria,
+                                                              Map<String, dynamic> values) {
+    var table = getTable(tableName);
+    return new Future.value(table.update(criteria, values));
+  }
 }
 
 
 class MemoryTable {
   final Table table;
   final Incrementor incrementor = new Incrementor();
-  final List<Map<String, dynamic>> _records = [];
+  final RecordList _records = new RecordList();
   
   MemoryTable(this.table);
   
   String get name => table.name;
   
-  List<Map<String, dynamic>> get records => _records;
+  List<Map<String, dynamic>> get records => _records.toMapList();
   
-  void store(Map<String, dynamic> record) {
+  void store(Map<String, dynamic> data) {
+    var record = new Record(data);
     if (!validate(record))
       throw new ArgumentError.value(record, "record", "Invalid record");
     var incremented = applyIncrements(record);
-    _records.add(incremented);
+    _records.add(record);
   }
   
-  bool validate(Map<String, dynamic> record) {
+  bool validate(Record record, {Record without}) {
     return record.keys.every((name) {
       var field = table.getField(name);
       var value = record[name];
-      return validateField(field, value);
+      return validateField(field, value, without: without);
     });
   }
   
-  Map<String, dynamic> applyIncrements(Map<String, dynamic> record) {
+  Record applyIncrements(Record record) {
     var incrementFields = table.fields.where((field) =>
         field.constraints.any((constraint) => constraint is AutoIncrement));
-    incrementFields.forEach((field) {
-      if (null != record[field.name]) return; // If field is present, skip it
+    incrementFields.forEach((field) { // If field is present, skip it
+      if (null != record[field.name]) {
+        incrementor.update(field.name, record[field.name]); // Update the incrementor to not use the id again
+        return;
+      }
       record[field.name] = incrementor.getIncrement(field.name);
     });
     return record;
   }
   
-  bool validateField(Field field, value) {
+  bool validateField(Field field, value, {Record without}) {
     var validator = new Validator(field);
-    return validator.isValid(value, getValues(field.name));
+    var targetRecords = null == without ? _records : _records.without(without);
+    var values = targetRecords.getValues(field.name);
+    return validator.isValid(value, values);
   }
-  
-  List getValues(String name) =>
-      _records.map((record) => record[name]).toList();
   
   bool operator==(other) {
     if (other is! MemoryTable) return false;
@@ -99,19 +109,25 @@ class MemoryTable {
   int get hashCode => table.hashCode;
   
   List<Map<String, dynamic>> where(Map<String, dynamic> criteria) {
-    return _records.where(recordMatcher(criteria)).toList();
+    return _records.where(criteria).toMapList();
   }
   
   void delete(Map<String, dynamic> criteria) {
-    records.removeWhere(recordMatcher(criteria));
+    _records.delete(criteria);
   }
   
-  static recordMatcher(Map<String, dynamic> criteria) {
-    return (record) {
-      return criteria.keys.every((key) {
-        return record[key] == criteria[key];
-      });
-    };
+  List<Map<String, dynamic>> update(Map<String, dynamic> criteria,
+                                    Map<String, dynamic> values) {
+    var targets = _records.where(criteria);
+    targets.forEach((record) {
+      var clone = record.clone();
+      clone.update(values);
+      if (!validate(clone, without: record))
+        throw new ArgumentError.value(values, "values",
+            "Update values violate constraints");
+      record.update(values);
+    });
+    return targets.toMapList();
   }
 }
 
@@ -124,6 +140,87 @@ class Incrementor {
     increments[name]++;
     return increments[name];
   }
+  
+  void update(String name, int value) {
+    if (null == increments[name]) {
+      increments[name] = value;
+      return;
+    }
+    increments[name] = max(increments[name], value);
+  }
+}
+
+
+class RecordList {
+  final List<Record> _records;
+  
+  RecordList([List<Record> records])
+      : _records = null == records ? [] : records;
+  
+  void add(Record record) => _records.add(record);
+  
+  RecordList where(Map<String, dynamic> criteria) {
+    return new RecordList(
+        _records.where((record) => record.matches(criteria))
+                .toList());
+  }
+  
+  List get records => _records;
+  
+  List getValues(String name) {
+    return _records.map((record) => record[name]).toList();
+  }
+  
+  RecordList without(Record record) {
+    return new RecordList(
+        _records.where((rec) => !identical(rec, record))
+                .toList());
+  }
+  
+  void forEach(f(Record record)) {
+    _records.forEach(f);
+  }
+  
+  void delete(Map<String, dynamic> criteria) {
+    _records.removeWhere((record) => record.matches(criteria));
+  }
+  
+  List<Map<String, dynamic>> toMapList() =>
+      _records.fold([], (List acc, record) => acc..add(record.toMap()));
+}
+
+
+class Record {
+  final Map<String, dynamic> _values;
+  
+  Iterable<String> get keys => _values.keys;
+  Iterable get values => _values.values;
+  
+  Record(this._values);
+  
+  Record.empty() : this({});
+  
+  void update(Map<String, dynamic> values) {
+    values.forEach((name, value) {
+      this._values[name] = value;
+    });
+  }
+  
+  operator[](String name) => _values[name];
+  
+  operator[]=(String name, value) => _values[name] = value;
+  
+  Map<String, dynamic> toMap() => _values;
+  
+  bool matches(Map<String, dynamic> criteria) {
+    return criteria.keys.every((key) {
+      return this._values[key] == criteria[key];
+    });
+  }
+  
+  Record clone() => new Record(new Map.from(_values));
+  
+  toString() => _values.toString();
 }
 
 
@@ -169,12 +266,7 @@ class NotNullValidation implements Validation {
   int get hashCode => typeCode(NotNullValidation);
   
   static bool shouldValidate(Set<Constraint> constraints) {
-    var result = false;
-    for (var constraint in constraints) {
-      if (constraint is AutoIncrement) return false;
-      if (constraint is NotNull) result = true;
-    }
-    return result;
+    return constraints.any((constraint) => constraint is NotNull);
   }
 }
 

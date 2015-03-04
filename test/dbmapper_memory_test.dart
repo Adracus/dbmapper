@@ -39,6 +39,69 @@ defineTests() {
     });
   });
   
+  group("Record", () {
+    test("update", () {
+      var r = new Record({"some": "attributes", "and": "stuff"});
+      
+      r.update({"some": "people", "should": "think"});
+      expect(r.toMap(), equals({
+        "some": "people",
+        "and": "stuff",
+        "should": "think"
+      }));
+    });
+    
+    test("matches", () {
+      var r = new Record({"criteria": "that", "could": "be matched"});
+      
+      expect(r.matches({"criteria": "that"}), isTrue);
+      expect(r.matches({}), isTrue);
+      expect(r.matches({"could": "not match"}), isFalse);
+    });
+  });
+  
+  group("RecordList", () {
+    test("without", () {
+      var r1 = new Record.empty();
+      var r2 = new Record.empty();
+      var r3 = new Record.empty();
+      
+      var recordList = new RecordList([r1, r2]);
+      expect(recordList.without(r1).records, equals([r2]));
+      expect(recordList.without(r3).records, equals([r1, r2]));
+    });
+    
+    test("getValues", () {
+      var r1 = new Record({"target": "value"});
+      var r2 = new Record({"target": "value2"});
+      var r3 = new Record.empty();
+      var recordList = new RecordList([r1, r2, r3]);
+      
+      expect(recordList.getValues("target"),
+          equals(["value", "value2", null]));
+    });
+    
+    test("where", () {
+      var r1 = new Record({"target": "value"});
+      var r2 = new Record({"target": "value2"});
+      var r3 = new Record.empty();
+      var recordList = new RecordList([r1, r2, r3]);
+      
+      var list = recordList.where({"target": "value2"});
+      expect(list.records, equals([r2]));
+    });
+    
+    test("delete", () {
+      var r1 = new Record({"target": "value"});
+      var r2 = new Record({"target": "value2"});
+      var r3 = new Record.empty();
+      var recordList = new RecordList([r1, r2, r3]);
+      
+      recordList.delete({"target": "value2"});
+      expect(recordList.records, equals([r1, r3]));
+    });
+  });
+  
   group("MemoryTable", () {
     test("==", () {
       var fields1 = new Set.from([new Field("myField")]);
@@ -141,6 +204,33 @@ defineTests() {
       expect(memoryTable.records.single, equals({"myField": 0}));
     });
     
+    test("update", () {
+      var fields = new Set.from([
+        new Field("myField",
+            constraints: new Set.from([Constraint.autoIncrement,
+                                           Constraint.unique])),
+        new Field("otherField")]);
+      var table = new Table("table", fields);
+      var memoryTable = new MemoryTable(table);
+      memoryTable.store({});
+      memoryTable.store({"otherField": "yeah"});
+      memoryTable.store({"otherField": "test"});
+      memoryTable.store({"otherField": "test"});
+      
+      var updated = memoryTable.update({"otherField": "yeah"},
+          {"otherField": "not yeah"});
+      
+      expect(memoryTable.records, equals([
+        {"myField": 0},
+        {"myField": 1, "otherField": "not yeah"},
+        {"myField": 2, "otherField": "test"},
+        {"myField": 3, "otherField": "test"}
+      ]));
+      
+      expect(() => memoryTable.update({"otherField": "not yeah"},
+          {"myField": 0}), throws);
+    });
+    
     test("applyIncrements", () {
       var fields = new Set.from([
         new Field("myField",
@@ -149,23 +239,22 @@ defineTests() {
       var table = new Table("table", fields);
       var memoryTable = new MemoryTable(table);
       
-      var incremented1 = memoryTable.applyIncrements({
+      var incremented1 = memoryTable.applyIncrements(new Record({
         "myField": null, "otherField": null
-      });
-      var incremented2 = memoryTable.applyIncrements({
+      }));
+      var incremented2 = memoryTable.applyIncrements(new Record({
         "myField": 10
-      });
-      var incremented3 = memoryTable.applyIncrements({
-      });
+      }));
+      var incremented3 = memoryTable.applyIncrements(new Record.empty());
       
-      expect(incremented1, equals({
+      expect(incremented1.toMap(), equals({
         "myField": 0, "otherField": null
       }));
-      expect(incremented2, equals({
+      expect(incremented2.toMap(), equals({
         "myField": 10
       }));
-      expect(incremented3, equals({
-        "myField": 1
+      expect(incremented3.toMap(), equals({
+        "myField": 11
       }));
     });
   });
@@ -249,7 +338,7 @@ defineTests() {
         var c4s = new Set.from([Constraint.primaryKey]);
         
         var shouldValidate = NotNullValidation.shouldValidate;
-        expect(shouldValidate(c1s), isFalse);
+        expect(shouldValidate(c1s), isTrue);
         expect(shouldValidate(c2s), isTrue);
         expect(shouldValidate(c3s), isFalse);
         expect(shouldValidate(c4s), isTrue);
@@ -283,7 +372,8 @@ defineTests() {
         var buildValidations = Validator.buildValidations;
         
         expect(buildValidations(f1),
-            equals(new Set.from([Validation.uniqueValidation])));
+            equals(new Set.from([Validation.uniqueValidation,
+                                 Validation.notNullValidation])));
         expect(buildValidations(f2),
             equals(new Set.from([Validation.notNullValidation])));
         expect(buildValidations(f3),
