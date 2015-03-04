@@ -182,6 +182,30 @@ defineTests() {
       });
     });
     
+    group("NotNullValidation", () {
+      test("isValid", () {
+        var n = new NotNullValidation();
+        
+        expect(n.isValid(null, []), isFalse);
+        expect(n.isValid("test", []), isTrue);
+      });
+      
+      test("==", () {
+        var n1 = new NotNullValidation();
+        var n2 = new NotNullValidation();
+        
+        expect(n1, equals(n2));
+      });
+      
+      test("hashCode", () {
+        var n1 = new NotNullValidation();
+        var n2 = new NotNullValidation();
+        
+        expect(n1.hashCode, equals(n2.hashCode));
+        expect(n1.hashCode, equals(typeCode(NotNullValidation)));
+      });
+    });
+    
     group("Validator", () {
       test("isValid", () {
         var f1 = new Field("myfield");

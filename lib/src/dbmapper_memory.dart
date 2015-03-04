@@ -134,8 +134,23 @@ class Validator implements Validation {
 
 abstract class Validation {
   static const UniqueValidation uniqueValidation = const UniqueValidation();
+  static const NotNullValidation notNullValidation = const NotNullValidation();
   
   bool isValid(value, List compare);
+}
+
+class NotNullValidation implements Validation {
+  const NotNullValidation();
+  
+  bool isValid(value, List compare) {
+    return value != null;
+  }
+  
+  bool operator==(other) {
+    return other is NotNullValidation;
+  }
+  
+  int get hashCode => typeCode(NotNullValidation);
 }
 
 class UniqueValidation implements Validation {
@@ -146,7 +161,6 @@ class UniqueValidation implements Validation {
   }
   
   bool operator==(other) {
-    if (other is! Validation) return false;
     return other is UniqueValidation;
   }
   

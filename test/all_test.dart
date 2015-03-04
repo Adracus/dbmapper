@@ -4,18 +4,13 @@
 library dbmapper.test;
 
 import 'package:unittest/unittest.dart';
-import 'package:dbmapper/dbmapper.dart';
+
+import 'dbmapper_definition_test.dart' as definition_test;
+import 'dbmapper_memory_test.dart' as memory_test;
 
 main() {
-  group('A group of tests', () {
-    Awesome awesome;
-
-    setUp(() {
-      awesome = new Awesome();
-    });
-
-    test('First Test', () {
-      expect(awesome.isAwesome, isTrue);
-    });
+  group("dbmapper", () {
+    definition_test.defineTests();
+    memory_test.defineTests();
   });
 }

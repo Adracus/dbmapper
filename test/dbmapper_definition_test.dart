@@ -172,12 +172,30 @@ defineTests() {
         
         expect(a1, equals(a2));
       });
+      
       test("hashCode", () {
         var a1 = new AutoIncrement();
         var a2 = new AutoIncrement();
         
         expect(a1.hashCode, equals(a2.hashCode));
         expect(a1.hashCode, equals(typeCode(AutoIncrement)));
+      });
+    });
+    
+    group("NotNull", () {
+      test("==", () {
+        var n1 = new NotNull();
+        var n2 = new NotNull();
+        
+        expect(n1, equals(n2));
+      });
+      
+      test("hashCode", () {
+        var n1 = new NotNull();
+        var n2 = new NotNull();
+        
+        expect(n1.hashCode, equals(n2.hashCode));
+        expect(n1.hashCode, equals(typeCode(NotNull)));
       });
     });
   });

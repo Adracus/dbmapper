@@ -96,3 +96,10 @@ class AutoIncrement implements Constraint {
   bool operator==(other) => other is AutoIncrement;
   int get hashCode => typeCode(AutoIncrement);
 }
+
+class NotNull implements Constraint {
+  const NotNull();
+  
+  bool operator==(other) => other is NotNull;
+  int get hashCode => typeCode(NotNull);
+}
