@@ -31,8 +31,8 @@ class MemoryDatabase implements Database {
   
   Future<Map<String, dynamic>> store(String tableName, Map<String, dynamic> record){
     var table = getTable(tableName);
-    table.store(record);
-    return new Future.value();
+    var stored = table.store(record);
+    return new Future.value(stored);
   }
   
   Future<List<Map<String, dynamic>>> where(String tableName, Map<String, dynamic> criteria) {
@@ -65,12 +65,13 @@ class MemoryTable {
   
   List<Map<String, dynamic>> get records => _records.toMapList();
   
-  void store(Map<String, dynamic> data) {
+  Map<String, dynamic> store(Map<String, dynamic> data) {
     var record = new Record(data);
     var incremented = applyIncrements(record);
     if (!validate(incremented))
       throw new ArgumentError.value(record, "record", "Invalid record");
     _records.add(incremented);
+    return incremented.toMap();
   }
   
   bool validate(Record record, {Record without}) {

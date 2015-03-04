@@ -37,6 +37,35 @@ defineTests() {
         }));
       }));
     });
+    
+    test("store", () {
+      Table userTable = (new TableBuilder("user")
+        ..addField(
+            (new FieldBuilder("id", type: FieldType.number)
+              ..addConstraint(Constraint.primaryKey)
+              ..addConstraint(Constraint.autoIncrement))
+              .build())
+        ..addField(
+            (new FieldBuilder("name")
+              ..addConstraint(Constraint.notNull))
+              .build())
+        ..addField(
+            (new FieldBuilder("email")
+              ..addConstraint(Constraint.notNull))
+              .build())
+        ).build();
+      
+      var db = new MemoryDatabase();
+      
+      db.createTable(userTable).then(async((_) {
+        db.store("user", {"name": "username", "email": "mail@mail.com"})
+          .then(async((stored) {
+          expect(stored["id"], equals(0));
+          expect(stored["name"], equals("username"));
+          expect(stored["email"], equals("mail@mail.com"));
+        }));
+      }));
+    });
   });
   
   group("Record", () {
