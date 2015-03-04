@@ -67,10 +67,10 @@ class MemoryTable {
   
   void store(Map<String, dynamic> data) {
     var record = new Record(data);
-    if (!validate(record))
-      throw new ArgumentError.value(record, "record", "Invalid record");
     var incremented = applyIncrements(record);
-    _records.add(record);
+    if (!validate(incremented))
+      throw new ArgumentError.value(record, "record", "Invalid record");
+    _records.add(incremented);
   }
   
   bool validate(Record record, {Record without}) {

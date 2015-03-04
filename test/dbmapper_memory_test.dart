@@ -162,6 +162,7 @@ defineTests() {
     test("where", () {
       var fields = new Set.from([
         new Field("myField",
+            type: FieldType.number,
             constraints: new Set.from([Constraint.autoIncrement,
                                            Constraint.unique])),
         new Field("otherField")]);
@@ -182,6 +183,7 @@ defineTests() {
     test("delete", () {
       var fields = new Set.from([
         new Field("myField",
+            type: FieldType.number,
             constraints: new Set.from([Constraint.autoIncrement,
                                            Constraint.unique])),
         new Field("otherField")]);
