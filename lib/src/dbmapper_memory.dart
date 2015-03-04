@@ -68,18 +68,20 @@ class MemoryTable {
   Map<String, dynamic> store(Map<String, dynamic> data) {
     var record = new Record(data);
     var incremented = applyIncrements(record);
-    if (!validate(incremented))
-      throw new ArgumentError.value(record, "record", "Invalid record");
+    var validation = validate(incremented);
+    if (!validation.isValid)
+      throw validation;
     _records.add(incremented);
     return incremented.toMap();
   }
   
-  bool validate(Record record, {Record without}) {
-    return record.keys.every((name) {
+  RecordValidation validate(Record record, {Record without}) {
+    var validations = record.keys.map((name) {
       var field = table.getField(name);
       var value = record[name];
       return validateField(field, value, without: without);
-    });
+    }).toSet();
+    return new RecordValidation(record, validations);
   }
   
   Record applyIncrements(Record record) {
@@ -95,11 +97,11 @@ class MemoryTable {
     return record;
   }
   
-  bool validateField(Field field, value, {Record without}) {
+  FieldValidation validateField(Field field, value, {Record without}) {
     var validator = new Validator(field);
     var targetRecords = null == without ? _records : _records.without(without);
     var values = targetRecords.getValues(field.name);
-    return validator.isValid(value, values);
+    return new FieldValidation(field, value, validator.validate(value, values));
   }
   
   bool operator==(other) {
@@ -123,13 +125,39 @@ class MemoryTable {
     targets.forEach((record) {
       var clone = record.clone();
       clone.update(values);
-      if (!validate(clone, without: record))
-        throw new ArgumentError.value(values, "values",
-            "Update values violate constraints");
+      var validation = validate(clone, without: record);
+      if (!validation.isValid) throw validation;
       record.update(values);
     });
     return targets.toMapList();
   }
+}
+
+class FieldValidation {
+  final ValidationResult validation;
+  final Field field;
+  final value;
+  
+  FieldValidation(this.field, this.value, this.validation);
+  
+  bool get isValid => validation.isValid;
+  
+  operator==(other) {
+    if (other is! FieldValidation) return false;
+    return field == other.field;
+  }
+  
+  int get hashCode => field.hashCode;
+}
+
+class RecordValidation {
+  final bool isValid;
+  final Record record;
+  final Set<FieldValidation> validations;
+  
+  RecordValidation(this.record, Set<FieldValidation> validations)
+      : validations = validations,
+        isValid = validations.every((validation) => validation.isValid);
 }
 
 class Incrementor {
@@ -231,9 +259,10 @@ class Validator implements Validation {
   Validator(Field field)
       : validations = buildValidations(field);
   
-  bool isValid(value, List compare) {
-    return validations.every((validation) =>
-        validation.isValid(value, compare));
+  ValidationResult validate(value, List compare) {
+    return validations.fold(new ValidationResult(), (result, validation) {
+      return result..combine(validation.validate(value, compare));
+    });
   }
   
   static Set<Validation> buildValidations(Field field) {
@@ -247,11 +276,47 @@ class Validator implements Validation {
   }
 }
 
+class ValidationError {
+  final value;
+  final String cause;
+  
+  ValidationError(this.value, [this.cause = "Inavlid value"]);
+  
+  operator==(other) {
+    if (other is! ValidationError) return false;
+    return value == other.value && cause == other.cause;
+  }
+  
+  int get hashCode => "${value.hashCode}|${cause.hashCode}".hashCode;
+  
+  toString() => this.cause;
+}
+
+class ValidationResult {
+  List<ValidationError> errors = [];
+  
+  ValidationResult([List<ValidationError> errors])
+      : errors = null == errors ? [] : errors;
+  
+  ValidationResult.error(value, [String cause = "Invalid value"])
+      : errors = [new ValidationError(value, cause)];
+  
+  void addError(ValidationError error) {
+    errors.add(error);
+  }
+  
+  void combine(ValidationResult other) {
+    this.errors.addAll(other.errors);
+  }
+  
+  bool get isValid => errors.isEmpty;
+}
+
 abstract class Validation {
   static const UniqueValidation uniqueValidation = const UniqueValidation();
   static const NotNullValidation notNullValidation = const NotNullValidation();
   
-  bool isValid(value, List compare);
+  ValidationResult validate(value, List compare);
 }
 
 class TypeValidation implements Validation {
@@ -267,8 +332,11 @@ class TypeValidation implements Validation {
   TypeValidation(FieldType type)
       : _validator = _validators[type.runtimeType];
   
-  bool isValid(value, List compare) =>
-      _validator(value);
+  ValidationResult validate(value, List compare) {
+    if (_validator(value)) return new ValidationResult();
+    return new ValidationResult.error(value,
+        "Value is not of expected type");
+  }
   
   bool operator==(other) => other is TypeValidation;
   int get hashCode => typeCode(TypeValidation);
@@ -277,8 +345,9 @@ class TypeValidation implements Validation {
 class NotNullValidation implements Validation {
   const NotNullValidation();
   
-  bool isValid(value, List compare) {
-    return value != null;
+  ValidationResult validate(value, List compare) {
+    if (value != null) return new ValidationResult();
+    return new ValidationResult.error(value, "Is null");
   }
   
   bool operator==(other) {
@@ -295,8 +364,10 @@ class NotNullValidation implements Validation {
 class UniqueValidation implements Validation {
   const UniqueValidation();
   
-  bool isValid(value, List compare) {
-    return compare.every((element) => element != value);
+  ValidationResult validate(value, List compare) {
+    if (compare.every((element) => element != value))
+      return new ValidationResult();
+    return new ValidationResult.error(value, "Is not unique");
   }
   
   bool operator==(other) {

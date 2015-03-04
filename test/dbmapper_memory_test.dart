@@ -304,14 +304,51 @@ defineTests() {
     });
   });
   
+  group("ValidationResult", () {
+    test("combine", () {
+      var v1 = new ValidationResult.error("other value", "other cause");
+      var v2 = new ValidationResult.error("some value", "some cause");
+      
+      v1.combine(v2);
+      expect(v1.errors, [new ValidationError("other value", "other cause"),
+                         new ValidationError("some value", "some cause")]);
+    });
+  });
+  
+  group("ValidationError", () {
+    test("==", () {
+      var v1 = new ValidationError(123, "Some cause");
+      var v2 = new ValidationError(123, "Other cause");
+      var v3 = new ValidationError(234, "Next cause");
+      var v4 = new ValidationError(123, "Some cause");
+      
+      expect(v1, equals(v1));
+      expect(v1, isNot(equals(v2)));
+      expect(v1, isNot(equals(v3)));
+      expect(v1, equals(v4));
+    });
+    
+    test("hashCode", () {
+      var v1 = new ValidationError(123, "Some cause");
+      var v2 = new ValidationError(123, "Other cause");
+      var v3 = new ValidationError(234, "Next cause");
+      var v4 = new ValidationError(123, "Some cause");
+      
+      expect(v1.hashCode, equals(v1.hashCode));
+      expect(v1.hashCode, isNot(equals(v2.hashCode)));
+      expect(v1.hashCode, isNot(equals(v3.hashCode)));
+      expect(v1.hashCode, equals(v4.hashCode));
+    });
+  });
+  
   group("Validation", () {
     group("UniqueValidation", () {
-      test("isValid", () {
+      test("validate", () {
         var u = new UniqueValidation();
         
-        expect(u.isValid(1, [2, 3, 4]), isTrue);
-        expect(u.isValid(1, [1, 2]), isFalse);
-        expect(u.isValid(1, []), isTrue);
+        expect(u.validate(1, [2, 3, 4]).isValid, isTrue);
+        expect(u.validate(1, [1, 2]).isValid, isFalse);
+        expect(u.validate(1, []).isValid, isTrue);
       });
       
       test("==", () {
@@ -342,11 +379,13 @@ defineTests() {
     });
     
     group("NotNullValidation", () {
-      test("isValid", () {
+      test("validate", () {
         var n = new NotNullValidation();
         
-        expect(n.isValid(null, []), isFalse);
-        expect(n.isValid("test", []), isTrue);
+        expect(n.validate(null, []).isValid, isFalse);
+        expect(n.validate("test", []).isValid, isTrue);
+        expect(n.validate(null, []).errors.single,
+            equals(new ValidationError(null, "Is null")));
       });
       
       test("==", () {
@@ -394,35 +433,35 @@ defineTests() {
         expect(v1.hashCode, equals(typeCode(TypeValidation)));
       });
       
-      test("isValid", () {
+      test("validate", () {
         var numValidator = new TypeValidation(FieldType.number);
         var textValidator = new TypeValidation(FieldType.text);
         var boolValidator = new TypeValidation(FieldType.boolType);
         var dateValidator = new TypeValidation(FieldType.date);
         
-        expect(numValidator.isValid(1, []), isTrue);
-        expect(numValidator.isValid("t", []), isFalse);
-        expect(textValidator.isValid("t", []), isTrue);
-        expect(textValidator.isValid(1, []), isFalse);
-        expect(boolValidator.isValid(true, []), isTrue);
-        expect(boolValidator.isValid(1, []), isFalse);
-        expect(dateValidator.isValid(new DateTime.now(), []), isTrue);
-        expect(dateValidator.isValid(1, []), isFalse);
+        expect(numValidator.validate(1, []).isValid, isTrue);
+        expect(numValidator.validate("t", []).isValid, isFalse);
+        expect(textValidator.validate("t", []).isValid, isTrue);
+        expect(textValidator.validate(1, []).isValid, isFalse);
+        expect(boolValidator.validate(true, []).isValid, isTrue);
+        expect(boolValidator.validate(1, []).isValid, isFalse);
+        expect(dateValidator.validate(new DateTime.now(), []).isValid, isTrue);
+        expect(dateValidator.validate(1, []).isValid, isFalse);
       });
     });
     
     group("Validator", () {
-      test("isValid", () {
+      test("validate", () {
         var f1 = new Field("myfield");
         var f2 = new Field("other",
             constraints: new Set.from([Constraint.unique]));
         var v1 = new Validator(f1); 
         var v2 = new Validator(f2);
         
-        expect(v1.isValid("test", ["test", "other", "some"]), isTrue);
-        expect(v2.isValid("test", ["test", "other", "some"]), isFalse);
-        expect(v1.isValid("test", []), isTrue);
-        expect(v2.isValid("test", []), isTrue);
+        expect(v1.validate("test", ["test", "other", "some"]).isValid, isTrue);
+        expect(v2.validate("test", ["test", "other", "some"]).isValid, isFalse);
+        expect(v1.validate("test", []).isValid, isTrue);
+        expect(v2.validate("test", []).isValid, isTrue);
       });
       
       test("buildValidations", () {
