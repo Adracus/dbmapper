@@ -77,7 +77,8 @@ Field fieldFromVariable(VariableMirror variable) {
 /// Converts the given [type] to the corresponding [FieldType]
 /// 
 /// The mapping is as follows:
-/// [num] => [Number]
+/// [int] => [Integer]
+/// [double] => [Double]
 /// [String] => [Text]
 /// [bool] => [Bool]
 /// [DateTime] => [Date]
@@ -86,8 +87,12 @@ Field fieldFromVariable(VariableMirror variable) {
 /// the return value of [toField] is returned. If [toField] is null,
 /// an [ArgumentError] is thrown.
 FieldType typeMapping(TypeMirror type, {toField(TypeMirror type)}) {
-  if (type.isAssignableTo(reflectType(num)))
-    return FieldType.number;
+  if (type.reflectedType == num)
+    throw new ArgumentError.value(type, "type", "Num is not supported");
+  if (type.isAssignableTo(reflectType(int)))
+    return FieldType.integer;
+  if (type.isAssignableTo(reflectType(double)))
+    return FieldType.doubleType;
   if (type.isAssignableTo(reflectType(String)))
     return FieldType.text;
   if (type.isAssignableTo(reflectType(bool)))

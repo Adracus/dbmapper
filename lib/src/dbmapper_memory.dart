@@ -323,7 +323,8 @@ class TypeValidation implements Validation {
   static final Map<FieldType, Function> _validators = {
     Date: (val) => val is DateTime,
     Bool: (val) => val is bool,
-    Number: (val) => val is num,
+    Integer: (val) => val is int,
+    Double: (val) => val is double,
     Text: (val) => val is String
   };
   

@@ -41,7 +41,7 @@ defineTests() {
     test("store", () {
       Table userTable = (new TableBuilder("user")
         ..addField(
-            (new FieldBuilder("id", type: FieldType.number)
+            (new FieldBuilder("id", type: FieldType.integer)
               ..addConstraint(primaryKey)
               ..addConstraint(autoIncrement))
               .build())
@@ -164,7 +164,7 @@ defineTests() {
     test("store", () {
       var fields = new Set.from([
         new Field("myField",
-            type: FieldType.number,
+            type: FieldType.integer,
             constraints: new Set.from([autoIncrement,
                                        unique])),
         new Field("otherField")]);
@@ -191,7 +191,7 @@ defineTests() {
     test("where", () {
       var fields = new Set.from([
         new Field("myField",
-            type: FieldType.number,
+            type: FieldType.integer,
             constraints: new Set.from([autoIncrement,
                                        unique])),
         new Field("otherField")]);
@@ -212,7 +212,7 @@ defineTests() {
     test("delete", () {
       var fields = new Set.from([
         new Field("myField",
-            type: FieldType.number,
+            type: FieldType.integer,
             constraints: new Set.from([autoIncrement,
                                        unique])),
         new Field("otherField")]);
@@ -239,7 +239,7 @@ defineTests() {
     test("update", () {
       var fields = new Set.from([
         new Field("myField",
-            type: FieldType.number,
+            type: FieldType.integer,
             constraints: new Set.from([autoIncrement,
                                        unique])),
         new Field("otherField")]);
@@ -434,13 +434,16 @@ defineTests() {
       });
       
       test("validate", () {
-        var numValidator = new TypeValidation(FieldType.number);
+        var intValidator = new TypeValidation(FieldType.integer);
+        var doubleValidator = new TypeValidation(FieldType.doubleType);
         var textValidator = new TypeValidation(FieldType.text);
         var boolValidator = new TypeValidation(FieldType.boolType);
         var dateValidator = new TypeValidation(FieldType.date);
         
-        expect(numValidator.validate(1, []).isValid, isTrue);
-        expect(numValidator.validate("t", []).isValid, isFalse);
+        expect(intValidator.validate(1, []).isValid, isTrue);
+        expect(intValidator.validate("t", []).isValid, isFalse);
+        expect(doubleValidator.validate(.1, []).isValid, isTrue);
+        expect(doubleValidator.validate("t", []).isValid, isFalse);
         expect(textValidator.validate("t", []).isValid, isTrue);
         expect(textValidator.validate(1, []).isValid, isFalse);
         expect(boolValidator.validate(true, []).isValid, isTrue);

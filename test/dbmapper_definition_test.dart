@@ -73,7 +73,7 @@ defineTests() {
     test("==", () {
       var f1 = new Field("myfield");
       var f2 = new Field("myfield");
-      var f3 = new Field("myfield", type: FieldType.number);
+      var f3 = new Field("myfield", type: FieldType.integer);
       var f4 = new Field("notMyField");
       
       expect(f1, equals(f2));
@@ -84,7 +84,7 @@ defineTests() {
     test("hashCode", () {
       var f1 = new Field("myfield");
       var f2 = new Field("myfield");
-      var f3 = new Field("myfield", type: FieldType.number);
+      var f3 = new Field("myfield", type: FieldType.integer);
       var f4 = new Field("notMyField");
       
       expect(f1.hashCode, equals(f2.hashCode));
@@ -95,20 +95,20 @@ defineTests() {
   });
   
   group("FieldType", () {
-    group("Number", () {
+    group("Integer", () {
       test("==", () {
-        var n1 = new Number();
-        var n2 = new Number();
+        var n1 = new Integer();
+        var n2 = new Integer();
         
         expect(n1, equals(n2));
       });
       
       test("hashCode", () {
-        var n1 = new Number();
-        var n2 = new Number();
+        var n1 = new Integer();
+        var n2 = new Integer();
         
         expect(n1.hashCode, equals(n2.hashCode));
-        expect(n1.hashCode, equals(typeCode(Number)));
+        expect(n1.hashCode, equals(typeCode(Integer)));
       });
     });
     
@@ -126,6 +126,23 @@ defineTests() {
         
         expect(t1.hashCode, equals(t2.hashCode));
         expect(t1.hashCode, equals(typeCode(Text)));
+      });
+    });
+    
+    group("Double", () {
+      test("==", () {
+        var d1 = new Double();
+        var d2 = new Double();
+        
+        expect(d1, equals(d2));
+      });
+      
+      test("hashCode", () {
+        var d1 = new Double();
+        var d2 = new Double();
+        
+        expect(d1.hashCode, equals(d2.hashCode));
+        expect(d1.hashCode, equals(typeCode(Double)));
       });
     });
     

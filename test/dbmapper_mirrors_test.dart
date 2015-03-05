@@ -180,7 +180,9 @@ defineTests() {
     expect(typeMapping(reflectType(String)), equals(FieldType.text));
     expect(typeMapping(reflectType(bool)), equals(FieldType.boolType));
     expect(typeMapping(reflectType(DateTime)), equals(FieldType.date));
-    expect(typeMapping(reflectType(int)), equals(FieldType.number));
+    expect(typeMapping(reflectType(int)), equals(FieldType.integer));
+    expect(typeMapping(reflectType(double)), equals(FieldType.doubleType));
+    expect(() => typeMapping(reflectType(num)), throws, reason: "Num is not supported");
     expect(() => typeMapping(reflectType(Symbol)), throws);
     expect(typeMapping(reflectType(Symbol), toField: (mirror) => FieldType.date),
         equals(FieldType.date));

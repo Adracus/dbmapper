@@ -64,7 +64,7 @@ class PostgresDatabase implements Database {
     if (variable.constraints.any((elem) =>
         elem is AutoIncrement)) return "serial";
     if (variable.type == FieldType.text) return "text";
-    if (variable.type == FieldType.number) return "integer";
+    if (variable.type == FieldType.integer) return "integer";
     //if (variable.type == FieldType.double) return "double precision";
     if (variable.type == FieldType.date) return "timestamp";
     if (variable.type == FieldType.boolType) return "boolean";
