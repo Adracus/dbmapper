@@ -86,11 +86,12 @@ class Text implements FieldType {
   int get hashCode => typeCode(Text);
 }
 
+const unique = const Unique();
+const primaryKey = const PrimaryKey();
+const autoIncrement = const AutoIncrement();
+const notNull = const NotNull();
+
 abstract class Constraint {
-  static const unique = const Unique();
-  static const primaryKey = const PrimaryKey();
-  static const autoIncrement = const AutoIncrement();
-  static const notNull = const NotNull();
 }
 
 class Unique implements Constraint {

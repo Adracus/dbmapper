@@ -7,10 +7,12 @@ import 'package:unittest/unittest.dart';
 
 import 'dbmapper_definition_test.dart' as definition_test;
 import 'dbmapper_memory_test.dart' as memory_test;
+import 'dbmapper_mirrors_test.dart' as mirrors_test;
 
 main() {
   group("dbmapper", () {
     definition_test.defineTests();
     memory_test.defineTests();
+    mirrors_test.defineTests();
   });
 }

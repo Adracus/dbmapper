@@ -42,16 +42,16 @@ defineTests() {
       Table userTable = (new TableBuilder("user")
         ..addField(
             (new FieldBuilder("id", type: FieldType.number)
-              ..addConstraint(Constraint.primaryKey)
-              ..addConstraint(Constraint.autoIncrement))
+              ..addConstraint(primaryKey)
+              ..addConstraint(autoIncrement))
               .build())
         ..addField(
             (new FieldBuilder("name")
-              ..addConstraint(Constraint.notNull))
+              ..addConstraint(notNull))
               .build())
         ..addField(
             (new FieldBuilder("email")
-              ..addConstraint(Constraint.notNull))
+              ..addConstraint(notNull))
               .build())
         ).build();
       
@@ -165,8 +165,8 @@ defineTests() {
       var fields = new Set.from([
         new Field("myField",
             type: FieldType.number,
-            constraints: new Set.from([Constraint.autoIncrement,
-                                           Constraint.unique])),
+            constraints: new Set.from([autoIncrement,
+                                       unique])),
         new Field("otherField")]);
       var table = new Table("table", fields);
       var memoryTable = new MemoryTable(table);
@@ -192,8 +192,8 @@ defineTests() {
       var fields = new Set.from([
         new Field("myField",
             type: FieldType.number,
-            constraints: new Set.from([Constraint.autoIncrement,
-                                           Constraint.unique])),
+            constraints: new Set.from([autoIncrement,
+                                       unique])),
         new Field("otherField")]);
       var table = new Table("table", fields);
       var memoryTable = new MemoryTable(table);
@@ -213,8 +213,8 @@ defineTests() {
       var fields = new Set.from([
         new Field("myField",
             type: FieldType.number,
-            constraints: new Set.from([Constraint.autoIncrement,
-                                           Constraint.unique])),
+            constraints: new Set.from([autoIncrement,
+                                       unique])),
         new Field("otherField")]);
       var table = new Table("table", fields);
       var memoryTable = new MemoryTable(table);
@@ -240,8 +240,8 @@ defineTests() {
       var fields = new Set.from([
         new Field("myField",
             type: FieldType.number,
-            constraints: new Set.from([Constraint.autoIncrement,
-                                           Constraint.unique])),
+            constraints: new Set.from([autoIncrement,
+                                       unique])),
         new Field("otherField")]);
       var table = new Table("table", fields);
       var memoryTable = new MemoryTable(table);
@@ -267,7 +267,7 @@ defineTests() {
     test("applyIncrements", () {
       var fields = new Set.from([
         new Field("myField",
-            constraints: new Set.from([Constraint.autoIncrement])),
+            constraints: new Set.from([autoIncrement])),
         new Field("otherField")]);
       var table = new Table("table", fields);
       var memoryTable = new MemoryTable(table);
@@ -367,8 +367,8 @@ defineTests() {
       });
       
       test("shouldValidate", () {
-        var c1s = new Set.from([Constraint.unique, Constraint.notNull]);
-        var c2s = new Set.from([Constraint.notNull]);
+        var c1s = new Set.from([unique, notNull]);
+        var c2s = new Set.from([notNull]);
         var c3s = new Set();
         var shouldValidate = UniqueValidation.shouldValidate;
         
@@ -404,10 +404,10 @@ defineTests() {
       });
       
       test("shouldValidate", () {
-        var c1s = new Set.from([Constraint.autoIncrement, Constraint.notNull]);
-        var c2s = new Set.from([Constraint.notNull]);
+        var c1s = new Set.from([autoIncrement, notNull]);
+        var c2s = new Set.from([notNull]);
         var c3s = new Set();
-        var c4s = new Set.from([Constraint.primaryKey]);
+        var c4s = new Set.from([primaryKey]);
         
         var shouldValidate = NotNullValidation.shouldValidate;
         expect(shouldValidate(c1s), isTrue);
@@ -454,7 +454,7 @@ defineTests() {
       test("validate", () {
         var f1 = new Field("myfield");
         var f2 = new Field("other",
-            constraints: new Set.from([Constraint.unique]));
+            constraints: new Set.from([unique]));
         var v1 = new Validator(f1); 
         var v2 = new Validator(f2);
         
@@ -466,13 +466,13 @@ defineTests() {
       
       test("buildValidations", () {
         var f1 = new Field("other",
-            constraints: new Set.from([Constraint.unique,
-                                       Constraint.autoIncrement,
-                                       Constraint.notNull]));
+            constraints: new Set.from([unique,
+                                       autoIncrement,
+                                       notNull]));
         var f2 = new Field("other",
-            constraints: new Set.from([Constraint.notNull]));
+            constraints: new Set.from([notNull]));
         var f3 = new Field("other",
-            constraints: new Set.from([Constraint.primaryKey]));
+            constraints: new Set.from([primaryKey]));
         
         var buildValidations = Validator.buildValidations;
         
