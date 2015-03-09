@@ -14,6 +14,11 @@ class MemoryDatabase implements Database {
     return new Future.value(_hasTable(tableName));
   }
   
+  Future drop(String tableName) {
+    _tables.removeWhere((table) => table.name == tableName);
+    return new Future.value();
+  }
+  
   bool _hasTable(String tableName) {
     return _tables.any((table) => table.name == tableName);
   }

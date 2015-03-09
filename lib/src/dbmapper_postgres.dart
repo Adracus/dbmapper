@@ -108,7 +108,7 @@ class PostgresDatabase implements Database {
   }
   
   
-  Future dropTable(String tableName) {
+  Future drop(String tableName) {
     return _execute("DROP TABLE \"$tableName\"")
             .then((res) => new Future.value());
   }

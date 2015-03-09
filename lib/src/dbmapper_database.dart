@@ -19,4 +19,6 @@ abstract class Database {
   
   Future update(String tableName, Map<String, dynamic> criteria,
                 Map<String, dynamic> values);
+  
+  Future drop(String tableName);
 }

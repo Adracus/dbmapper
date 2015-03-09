@@ -15,8 +15,24 @@ defineTests() {
                                  new Field("otherField")]);
       var t = new Table("table", fields);
       db.createTable(t).then(async((_) {
+        expect(db.getTable("table"), isNot(isNull));
+        
         db.createTable(t).catchError(async((e) {
           expect(e, new isInstanceOf<Exception>());
+        }));
+      }));
+    });
+    
+    test("dropTable", () {
+      var db = new MemoryDatabase();
+      var fields = new Set.from([new Field("myField"),
+                                 new Field("otherField")]);
+      var t = new Table("table", fields);
+      db.createTable(t).then(async((_) {
+        db.drop("table").then(async((_) {
+          db.hasTable("table").then(async((tableExists) {
+            expect(tableExists, isFalse);
+          }));
         }));
       }));
     });
