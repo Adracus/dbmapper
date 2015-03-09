@@ -70,6 +70,33 @@ defineTests() {
   });
   
   group("Field", () {
+    test("Constructor", () {
+      var f1 = new Field("test");
+      var f2 = new Field("test", type: FieldType.integer);
+      var f3 = new Field("test",
+          type: FieldType.integer,
+          constraints: new Set.from([unique]));
+      var f4 = new Field("test",
+          type: FieldType.integer,
+          constraints: new Set.from([autoIncrement]));
+      
+      expect(f1.type, equals(FieldType.text));
+      expect(f1.constraints, isEmpty);
+      
+      expect(f2.type, equals(FieldType.integer));
+      expect(f2.constraints, isEmpty);
+      
+      expect(f3.type, equals(FieldType.integer));
+      expect(f3.constraints, equals(new Set.from([unique])));
+      
+      expect(f4.type, equals(FieldType.integer));
+      expect(f4.constraints, equals(new Set.from([autoIncrement])));
+      
+      expect(() => new Field("test",
+          type: FieldType.text,
+          constraints: new Set.from([autoIncrement])), throwsArgumentError);
+    });
+    
     test("==", () {
       var f1 = new Field("myfield");
       var f2 = new Field("myfield");
@@ -197,6 +224,10 @@ defineTests() {
         expect(u1.hashCode, equals(u2.hashCode));
         expect(u1.hashCode, equals(typeCode(Unique)));
       });
+      
+      test("compatible", () {
+        expect(FieldType.types.every(unique.compatible), isTrue);
+      });
     });
     
     group("PrimaryKey", () {
@@ -213,6 +244,10 @@ defineTests() {
         
         expect(p1.hashCode, equals(p2.hashCode));
         expect(p1.hashCode, equals(typeCode(PrimaryKey)));
+      });
+      
+      test("compatible", () {
+        expect(FieldType.types.every(primaryKey.compatible), isTrue);
       });
     });
     
@@ -231,6 +266,13 @@ defineTests() {
         expect(a1.hashCode, equals(a2.hashCode));
         expect(a1.hashCode, equals(typeCode(AutoIncrement)));
       });
+      
+      test("comptatible", () {
+        expect(autoIncrement.compatible(FieldType.integer), isTrue);
+        expect(FieldType.types.where((field) => field is! Integer)
+                              .every((type) => !autoIncrement.compatible(type)),
+                              isTrue);
+      });
     });
     
     group("NotNull", () {
@@ -247,6 +289,10 @@ defineTests() {
         
         expect(n1.hashCode, equals(n2.hashCode));
         expect(n1.hashCode, equals(typeCode(NotNull)));
+      });
+      
+      test("compatible", () {
+        expect(FieldType.types.every(notNull.compatible), isTrue);
       });
     });
   });

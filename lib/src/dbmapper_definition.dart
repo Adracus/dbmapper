@@ -40,8 +40,16 @@ class Field {
   final FieldType type;
   final Set<Constraint> constraints;
   
-  Field(this.name, {this.type: FieldType.text, Set<Constraint> constraints})
-      : constraints = null == constraints ? new Set() : constraints;
+  Field(this.name, {FieldType type: FieldType.text, Set<Constraint> constraints})
+      : type = type,
+        constraints = null == constraints ? new Set() :
+          validConstraints(type, constraints) ? constraints :
+            throw new ArgumentError.value(constraints,
+                "constraints", "Constraints not compatible with $type");
+      
+  static bool validConstraints(FieldType type, Set<Constraint> constraints) {
+    return constraints.every((constraint) => constraint.compatible(type));
+  }
       
   bool operator==(other) {
     if (other is! Field) return false;
@@ -57,6 +65,9 @@ abstract class FieldType {
   static const text = const Text();
   static const boolType = const Bool();
   static const date = const Date();
+  
+  static const List<FieldType> types =
+      const[integer, doubleType, text, boolType, date];
 }
 
 class Integer implements FieldType {
@@ -100,6 +111,9 @@ const autoIncrement = const AutoIncrement();
 const notNull = const NotNull();
 
 abstract class Constraint {
+  const Constraint();
+  
+  bool compatible(FieldType type) => true;
 }
 
 class Unique implements Constraint {
@@ -107,6 +121,7 @@ class Unique implements Constraint {
   
   bool operator==(other) => other is Unique;
   int get hashCode => typeCode(Unique);
+  bool compatible(FieldType type) => true;
 }
 
 class PrimaryKey implements Unique, NotNull {
@@ -114,6 +129,7 @@ class PrimaryKey implements Unique, NotNull {
   
   bool operator==(other) => other is PrimaryKey;
   int get hashCode => typeCode(PrimaryKey);
+  bool compatible(FieldType type) => true;
 }
 
 class AutoIncrement implements Constraint {
@@ -121,6 +137,8 @@ class AutoIncrement implements Constraint {
   
   bool operator==(other) => other is AutoIncrement;
   int get hashCode => typeCode(AutoIncrement);
+  
+  bool compatible(FieldType type) => type is Integer;
 }
 
 class NotNull implements Constraint {
@@ -128,4 +146,6 @@ class NotNull implements Constraint {
   
   bool operator==(other) => other is NotNull;
   int get hashCode => typeCode(NotNull);
+  
+  bool compatible(FieldType field) => true;
 }

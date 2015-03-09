@@ -38,12 +38,7 @@ class PostgresDatabase implements Database {
   
   Future<bool> hasTable(String tableName) {
     return obtainConnection().then((conn) {
-      var stmnt = "SELECT EXISTS (" +
-          "SELECT table_name " +
-          "FROM information_schema.tables " +
-          "WHERE table_schema = 'public' " +
-          "AND table_name = '$tableName' "
-        ")";
+      var stmnt = buildExistsStatement(tableName);
       logger.info(() => stmnt);
       return conn.query(stmnt)
           .toList().then((rows) {
@@ -53,42 +48,56 @@ class PostgresDatabase implements Database {
   }
   
   
-  Future createTable(Table table) {
-    var variables = table.fields.map(columnForCreate).join(", ");
-    return _execute("CREATE TABLE \"${table.name}\" ($variables)").then((_) =>
-        new Future.value());
+  static String buildExistsStatement(String tableName) {
+    return "SELECT EXISTS (" +
+      "SELECT table_name " +
+      "FROM information_schema.tables " +
+      "WHERE table_schema = 'public' " +
+      "AND table_name = '$tableName' "
+    ")";
   }
   
   
-  String getType(Field variable) {
+  Future createTable(Table table) {
+    var stmnt = buildCreateTableStatement(table);
+    return _execute(stmnt).then((_) =>
+        new Future.value());
+  }
+  
+  static String buildCreateTableStatement(Table table) {
+    var variables = table.fields.map(getColumn).join(", ");
+    return "CREATE TABLE \"${table.name}\" ($variables)";
+  }
+  
+  
+  static String getType(Field variable) {
     if (variable.constraints.any((elem) =>
         elem is AutoIncrement)) return "serial";
     if (variable.type == FieldType.text) return "text";
     if (variable.type == FieldType.integer) return "integer";
-    //if (variable.type == FieldType.double) return "double precision";
+    if (variable.type == FieldType.doubleType) return "double precision";
     if (variable.type == FieldType.date) return "timestamp";
     if (variable.type == FieldType.boolType) return "boolean";
     throw new UnsupportedError("Type '${variable.type}' not supported");
   }
   
   
-  String columnForCreate(Field variable) {
+  static String getColumn(Field variable) {
     var type = getType(variable);
     return ("\"${variable.name}\" $type " +
-        variable.constraints.map(constraintsForCreate).join(" ")).trim();
+        variable.constraints.map(getConstraints).join(" ")).trim();
   }
   
   
-  static String constraintsForCreate(Constraint constraint) {
-    /*if (constraint is PrimaryKey) return "primary key";
-    if (constraint is Unique) return "unique";*/
+  static String getConstraints(Constraint constraint) {
+    if (constraint is PrimaryKey) return "primary key";
+    if (constraint is Unique) return "unique";
     return "";
   }
   
   
   Future<List<Map<String, dynamic>>> all(String tableName) {
-    return _query("SELECT * FROM \"$tableName\"").then((rows) =>
-        transformRows(rows));
+    return where(tableName, {});
   }
   
   
@@ -125,11 +134,11 @@ class PostgresDatabase implements Database {
   }
   
   
-  String generateAndClause(Iterable<String> keyNames) =>
+  static String generateAndClause(Iterable<String> keyNames) =>
       keyNames.map((k) => "\"$k\" = @$k").join(" AND ");
   
   
-  String generateOrClause(Iterable<String> keyNames) =>
+  static String generateOrClause(Iterable<String> keyNames) =>
       keyNames.map((k) => "\"$k\" = @$k").join(" OR ");
   
   
@@ -169,7 +178,7 @@ class PostgresDatabase implements Database {
   
   Future addColumnToTable(String tableName, Field column) {
     return _execute("ALTER TABLE \"$tableName\" ADD COLUMN " + 
-        "${columnForCreate(column)}");
+        "${getColumn(column)}");
   }
   
   

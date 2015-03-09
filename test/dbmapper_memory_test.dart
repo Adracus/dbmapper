@@ -267,6 +267,7 @@ defineTests() {
     test("applyIncrements", () {
       var fields = new Set.from([
         new Field("myField",
+            type: FieldType.integer,
             constraints: new Set.from([autoIncrement])),
         new Field("otherField")]);
       var table = new Table("table", fields);
@@ -469,6 +470,7 @@ defineTests() {
       
       test("buildValidations", () {
         var f1 = new Field("other",
+            type: FieldType.integer,
             constraints: new Set.from([unique,
                                        autoIncrement,
                                        notNull]));
