@@ -10,7 +10,7 @@ main() => defineTests();
 
 class User {
   static int userCount = 0;
-  
+
   @unique
   String name;
   String mail;
@@ -31,75 +31,58 @@ defineTests() {
     test("non recursive", () {
       var userFields = getFields(User);
       var adminFields = getFields(Admin);
-      
-      expect(userFields.keys.toList(),
-          equals([#userCount, #name, #mail]));
-      expect(adminFields.keys.toList(),
-          equals([#adminName]));
+
+      expect(userFields.keys.toList(), equals([#userCount, #name, #mail]));
+      expect(adminFields.keys.toList(), equals([#adminName]));
     });
-    
+
     test("recursive", () {
       var fields = getFields(User, recursive: true);
-      
-      expect(fields.keys.take(3).toList(),
-          equals([#userCount, #name, #mail]));
-      var last = fields.keys.last; // Some strange equality bug in symbols
-      var name = MirrorSystem.getName(last);
-      expect(name, equals("_hashCodeRnd"));
+
+      expect(fields.keys.take(3).toList(), equals([#userCount, #name, #mail]));
     });
   });
-  
+
   group("instanceFields", () {
     test("non recursive", () {
       var userFields = getInstanceFields(User);
       var adminFields = getInstanceFields(Admin);
-      
+
       expect(userFields.keys.toList(), equals([#name, #mail]));
       expect(adminFields.keys.toList(), equals([#adminName]));
     });
-    
+
     test("recursive", () {
       var userFields = getInstanceFields(User, recursive: true);
       var adminFields = getInstanceFields(Admin, recursive: true);
-      
+
       expect(userFields.keys.toList(), equals([#name, #mail]));
       expect(adminFields.keys.toList(), equals([#adminName, #name, #mail]));
     });
   });
-  
+
   group("ValueExtractor", () {
     group("Constructor", () {
       test("non recursive", () {
         var e1 = new ValueExtractor<User>(User);
         var e2 = new ValueExtractor<Admin>(Admin);
-        
-        expect(e1.symbolNames, equals({
-          #name: "name",
-          #mail: "mail"
-        }));
-        
-        expect(e2.symbolNames, equals({
-          #adminName: "adminName"
-        }));
+
+        expect(e1.symbolNames, equals({#name: "name", #mail: "mail"}));
+
+        expect(e2.symbolNames, equals({#adminName: "adminName"}));
       });
-      
+
       test("recursive", () {
         var e1 = new ValueExtractor<User>(User, recursive: true);
         var e2 = new ValueExtractor<Admin>(Admin, recursive: true);
-        
-        expect(e1.symbolNames, equals({
-          #name: "name",
-          #mail: "mail"
-        }));
-        
-        expect(e2.symbolNames, equals({
-          #name: "name",
-          #mail: "mail",
-          #adminName: "adminName"
-        }));
+
+        expect(e1.symbolNames, equals({#name: "name", #mail: "mail"}));
+
+        expect(e2.symbolNames,
+            equals({#name: "name", #mail: "mail", #adminName: "adminName"}));
       });
     });
-    
+
     group("extractValues", () {
       test("non recursive", () {
         var admin = new Admin()
@@ -109,18 +92,15 @@ defineTests() {
         var user = new User()
           ..name = "john"
           ..mail = "john@example.org";
-        
+
         var userValues = ValueExtractor.extractValues(user);
         var adminValues = ValueExtractor.extractValues(admin);
-        
-        expect(userValues, equals({
-          "name": "john", "mail": "john@example.org"
-        }));
-        expect(adminValues, equals({
-          "adminName": "root"
-        }));
+
+        expect(
+            userValues, equals({"name": "john", "mail": "john@example.org"}));
+        expect(adminValues, equals({"adminName": "root"}));
       });
-      
+
       test("recursive", () {
         var admin = new Admin()
           ..adminName = "root"
@@ -129,45 +109,47 @@ defineTests() {
         var user = new User()
           ..name = "john"
           ..mail = "john@example.org";
-        
+
         var userValues = ValueExtractor.extractValues(user, recursive: true);
         var adminValues = ValueExtractor.extractValues(admin, recursive: true);
-        
-        expect(userValues, equals({
-          "name": "john", "mail": "john@example.org"
-        }));
-        expect(adminValues, equals({
-          "adminName": "root",
-          "name": "guenther", "mail": "admin@example.org"
-        }));
+
+        expect(
+            userValues, equals({"name": "john", "mail": "john@example.org"}));
+        expect(
+            adminValues,
+            equals({
+              "adminName": "root",
+              "name": "guenther",
+              "mail": "admin@example.org"
+            }));
       });
     });
   });
-  
+
   group("tableFromClass", () {
     test("non recursive", () {
       var t1 = tableFromClass(User);
       var t2 = tableFromClass(Admin);
       var nameField = (new FieldBuilder("name", type: FieldType.text)
-        ..addConstraint(unique))
-        .build();
+        ..addConstraint(unique)).build();
       var mailField = new FieldBuilder("mail", type: FieldType.text).build();
-      var adminNameField = new FieldBuilder("adminName", type: FieldType.text).build();
-      
+      var adminNameField =
+          new FieldBuilder("adminName", type: FieldType.text).build();
+
       equalFields(t2.fields.single, adminNameField);
       equalFields(t1.fields.first, nameField);
       equalFields(t1.fields.last, mailField);
     });
-    
+
     test("recursive", () {
       var t1 = tableFromClass(User, recursive: true);
       var t2 = tableFromClass(Admin, recursive: true);
       var nameField = (new FieldBuilder("name", type: FieldType.text)
-        ..addConstraint(unique))
-        .build();
+        ..addConstraint(unique)).build();
       var mailField = new FieldBuilder("mail", type: FieldType.text).build();
-      var adminNameField = new FieldBuilder("adminName", type: FieldType.text).build();
-      
+      var adminNameField =
+          new FieldBuilder("adminName", type: FieldType.text).build();
+
       equalFields(t1.fields.toList()[0], nameField);
       equalFields(t1.fields.toList()[1], mailField);
       equalFields(t2.fields.toList()[0], adminNameField);
@@ -175,16 +157,18 @@ defineTests() {
       equalFields(t2.fields.toList()[2], mailField);
     });
   });
-  
+
   test("typeMapping", () {
     expect(typeMapping(reflectType(String)), equals(FieldType.text));
     expect(typeMapping(reflectType(bool)), equals(FieldType.boolType));
     expect(typeMapping(reflectType(DateTime)), equals(FieldType.date));
     expect(typeMapping(reflectType(int)), equals(FieldType.integer));
     expect(typeMapping(reflectType(double)), equals(FieldType.doubleType));
-    expect(() => typeMapping(reflectType(num)), throws, reason: "Num is not supported");
+    expect(() => typeMapping(reflectType(num)), throws,
+        reason: "Num is not supported");
     expect(() => typeMapping(reflectType(Symbol)), throws);
-    expect(typeMapping(reflectType(Symbol), toField: (mirror) => FieldType.date),
+    expect(
+        typeMapping(reflectType(Symbol), toField: (mirror) => FieldType.date),
         equals(FieldType.date));
   });
 }

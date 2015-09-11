@@ -4,13 +4,11 @@ import 'dart:mirrors';
 
 import 'dbmapper_definition.dart';
 
-
 Map<Symbol, VariableMirror> getFields(Type type, {bool recursive: false}) {
   var clazz = reflectClass(type);
   var result = {};
   clazz.declarations.forEach((symbol, declaration) {
-    if (declaration is VariableMirror)
-      result[symbol] = declaration;
+    if (declaration is VariableMirror) result[symbol] = declaration;
   });
   if (recursive && null != clazz.superclass) {
     var superType = clazz.superclass.reflectedType;
@@ -19,23 +17,23 @@ Map<Symbol, VariableMirror> getFields(Type type, {bool recursive: false}) {
   return result;
 }
 
-Map<Symbol, VariableMirror> getInstanceFields(Type type, {bool recursive: false}) {
+Map<Symbol, VariableMirror> getInstanceFields(Type type,
+    {bool recursive: false}) {
   var _fields = getFields(type, recursive: recursive);
   var result = {};
   _fields.forEach((symbol, variable) {
-    if (!variable.isStatic)
-      result[symbol] = variable;
+    if (!variable.isStatic) result[symbol] = variable;
   });
   return result;
 }
 
 class ValueExtractor<E> {
   final Map<Symbol, String> symbolNames;
-  
+
   ValueExtractor(Type type, {bool recursive: false})
-      : symbolNames =
-      extractSymbolNames(getInstanceFields(type, recursive: recursive).keys);
-  
+      : symbolNames = extractSymbolNames(
+            getInstanceFields(type, recursive: recursive).keys);
+
   Map<String, dynamic> extract(E instance) {
     var instanceMirror = reflect(instance);
     var result = {};
@@ -44,12 +42,14 @@ class ValueExtractor<E> {
     });
     return result;
   }
-  
-  static Map<String, dynamic> extractValues(Object instance, {bool recursive: false}) {
-    var extractor = new ValueExtractor(instance.runtimeType, recursive: recursive);
+
+  static Map<String, dynamic> extractValues(Object instance,
+      {bool recursive: false}) {
+    var extractor =
+        new ValueExtractor(instance.runtimeType, recursive: recursive);
     return extractor.extract(instance);
   }
-  
+
   static Map<Symbol, String> extractSymbolNames(Iterable<Symbol> symbols) {
     var result = {};
     symbols.forEach((symbol) {
@@ -75,31 +75,25 @@ Field fieldFromVariable(VariableMirror variable) {
 }
 
 /// Converts the given [type] to the corresponding [FieldType]
-/// 
+///
 /// The mapping is as follows:
 /// [int] => [Integer]
 /// [double] => [Double]
 /// [String] => [Text]
 /// [bool] => [Bool]
 /// [DateTime] => [Date]
-/// 
+///
 /// If the field type cannot be resolved according to this mapping,
 /// the return value of [toField] is returned. If [toField] is null,
 /// an [ArgumentError] is thrown.
 FieldType typeMapping(TypeMirror type, {toField(TypeMirror type)}) {
-  if (type.reflectedType == num)
-    throw new ArgumentError.value(type, "type", "Num is not supported");
-  if (type.isAssignableTo(reflectType(int)))
-    return FieldType.integer;
-  if (type.isAssignableTo(reflectType(double)))
-    return FieldType.doubleType;
-  if (type.isAssignableTo(reflectType(String)))
-    return FieldType.text;
-  if (type.isAssignableTo(reflectType(bool)))
-    return FieldType.boolType;
-  if (type.isAssignableTo(reflectType(DateTime)))
-    return FieldType.date;
+  if (type.reflectedType ==
+      num) throw new ArgumentError.value(type, "type", "Num is not supported");
+  if (type.isAssignableTo(reflectType(int))) return FieldType.integer;
+  if (type.isAssignableTo(reflectType(double))) return FieldType.doubleType;
+  if (type.isAssignableTo(reflectType(String))) return FieldType.text;
+  if (type.isAssignableTo(reflectType(bool))) return FieldType.boolType;
+  if (type.isAssignableTo(reflectType(DateTime))) return FieldType.date;
   if (null != toField) return toField(type);
-  throw new ArgumentError.value(type, "type",
-      "Unsupported type");
+  throw new ArgumentError.value(type, "type", "Unsupported type");
 }
